@@ -168,10 +168,5 @@ def add_constrants(solver:Solver, puzzle:Puzzle, soln:SymbolicSolution):
             if a < BoardSize and b < BoardSize]
     # duplicate the entire edge list to represent both directions since the constraints are for directed graphs
     edges = edges + [(b,a) for (a,b) in edges]
-
-    # TODO requires at least one cell be known empty so we can formulate a sat problem
-    # so this solver doesn't work on fully monsterless/treasureless boards
-    known_cell = puzzle.monsters[0] if len(puzzle.monsters) > 0 else puzzle.chests[0]
-
-    assert_connected(solver, nodes, edges, cell_to_flat_index[known_cell])
+    assert_connected(solver, nodes, edges)
 
