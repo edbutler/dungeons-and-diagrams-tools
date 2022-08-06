@@ -1,12 +1,13 @@
 
 from game import *
+from rules import add_constraints
 import z3
 
 def solve(p:Puzzle):
     s = z3.Solver()
     b = make_solution_guess(p)
 
-    add_constrants(s, p, b)
+    add_constraints(s, p, b)
 
     if s.check() == z3.sat:
         #print(s.statistics())
