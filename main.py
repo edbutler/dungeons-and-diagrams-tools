@@ -1,5 +1,5 @@
-from solve import solve, print_solution
-from game import Puzzle, boolean_grid_from_tuples
+from solve import *
+from game import *
 
 def test(p:Puzzle):
     soln = solve(p)

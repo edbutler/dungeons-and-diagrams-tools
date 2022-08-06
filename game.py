@@ -60,7 +60,14 @@ def make_solution_guess(puzzle:Puzzle) -> SymbolicSolution:
     def bv(i:int,name:str):
         return z3.BitVec(f'chest-room-{i}-{name}', BitvecBits)
 
-    chest_rooms = [(bv(i,'x'), bv(i,'y')) for i in range(len(puzzle.chests))]
+    # this is hardcoded for 8x8 puzzles, but could make it based on size
+    max_chests = 4
+
+    # we don't need to worry about making too many of these for the number of chests
+    # since they can overlap with each other (we don't even need to handle the zero
+    # chest case; the solver will place these rooms off the grid).
+    # we just need to make sure there are *at least* as many vars here as chests.
+    chest_rooms = [(bv(i,'x'), bv(i,'y')) for i in range(max_chests)]
 
     return SymbolicSolution(board, chest_rooms)  # type: ignore
 
