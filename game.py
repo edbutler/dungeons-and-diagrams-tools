@@ -1,15 +1,54 @@
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 import math
 import z3
 
 # true means a wall, false means an empty space
 Cell = z3.BoolRef|bool
-
-Location = tuple[z3.BitVecRef|int,z3.BitVecRef|int]
+SymbolicInt = z3.BitVecRef|int
+Location = tuple[SymbolicInt,SymbolicInt]
 
 BoardSize = 8
 BitvecBits = math.ceil(math.log2(BoardSize+1))
+
+def symbolic_int(name:str):
+    return z3.BitVec(name, BitvecBits)
+
+class ConcretePuzzle(NamedTuple):
+    rows: list[int]
+    cols: list[int]
+    # stored column major like the board
+    monsters: list[list[bool]]
+    chests: list[list[bool]]
+
+    def evaluate(self, model:z3.ModelRef):
+        return self
+
+class SymbolicPuzzle(NamedTuple):
+    rows: list[SymbolicInt]
+    cols: list[SymbolicInt]
+    # stored column major like the board
+    monsters: list[list[Cell]]
+    chests: list[list[Cell]]
+
+    def evaluate(self, model:z3.ModelRef):
+        def meval(x) -> Any:
+            # z3 chokes on ints for some reason? man I miss rosette
+            if isinstance(x, int):
+                return x
+            else:
+                return model.evaluate(x, True)
+
+        r = [meval(x) for x in self.rows]
+        c = [meval(x) for x in self.cols]
+        m = [[meval(x) for x in mcols] for mcols in self.monsters]
+        t = [[meval(x) for x in ccols] for ccols in self.chests]
+        return ConcretePuzzle(r, c, m, t)
+
+class ConcreteSolution(NamedTuple):
+    puzzle: ConcretePuzzle
+    #stored column major, so indexing is x (col) then y (row)
+    board: list[list[bool]]
 
 class SymbolicSolution(NamedTuple):
     #stored column major, so indexing is x (col) then y (row)
@@ -17,18 +56,12 @@ class SymbolicSolution(NamedTuple):
     # the top-left (lowest indexed) corner of each chest room
     chest_rooms: list[Location]
 
-class ConcreteSolution(NamedTuple):
-    #stored column major, so indexing is x (col) then y (row)
-    board: list[list[bool]]
+    def evaluate(self, puzzle:SymbolicPuzzle|ConcretePuzzle, model:z3.ModelRef):
+        board = [[model.evaluate(x, True) for x in col] for col in self.board]
 
-class Puzzle(NamedTuple):
-    rows: list[int]
-    cols: list[int]
-    # stored column major like the board
-    monsters: list[list[Cell]]
-    chests: list[list[Cell]]
+        return ConcreteSolution(puzzle.evaluate(model), board)
 
-def boolean_grid_from_tuples(tuples:list[tuple[int,int]]) -> list[list[Cell]]:
+def boolean_grid_from_tuples(tuples:list[tuple[int,int]]) -> list[list[bool]]:
     return [[(x,y) in tuples for y in range(BoardSize)] for x in range(BoardSize)]
 
 one = z3.BitVecVal(1, BitvecBits)
@@ -52,13 +85,13 @@ def row_ref(s:SymbolicSolution, row_y:int):
 def col_ref(s:SymbolicSolution, col_x:int):
     return s.board[col_x]
 
-def make_solution_guess(puzzle:Puzzle) -> SymbolicSolution:
+def make_solution_guess(puzzle:SymbolicPuzzle|ConcretePuzzle) -> SymbolicSolution:
     def make_cell(x,y):
         return z3.Bool(f'cell-{x}-{y}')
     board = [[make_cell(x,y) for y in range(BoardSize)] for x in range(BoardSize)]
 
     def bv(i:int,name:str):
-        return z3.BitVec(f'chest-room-{i}-{name}', BitvecBits)
+        return symbolic_int(f'chest-room-{i}-{name}')
 
     # this is hardcoded for 8x8 puzzles, but could make it based on size
     max_chests = 4

@@ -3,7 +3,7 @@ from game import *
 from rules import add_constraints
 import z3
 
-def solve(p:Puzzle):
+def solve(p:SymbolicPuzzle|ConcretePuzzle):
     """assuming p is a valid puzzle, this returns the solution to p."""
 
     s = z3.Solver()
@@ -14,11 +14,11 @@ def solve(p:Puzzle):
     if s.check() == z3.sat:
         #print(s.statistics())
         m = s.model()
-        return ConcreteSolution([[m.evaluate(x, True) for x in col] for col in b.board])
+        return b.evaluate(p, m)
     else:
         print("Unsolvable!")
 
-def verify(p:Puzzle):
+def verify(p:SymbolicPuzzle|ConcretePuzzle):
     """verifies that p is a valid puzzle, returning the solution if it exists.
     Unlike `solve`, this checks that the solution is unique."""
 
@@ -32,7 +32,7 @@ def verify(p:Puzzle):
 
     # and cache this solution before the next check since extra clauses mess up the model
     m = s.model()
-    soln = ConcreteSolution([[m.evaluate(x, True) for x in col] for col in b.board])
+    soln = b.evaluate(p, m)
 
     # then ensure the solution is unique by looking for a second one
     b2 = make_solution_guess(p)
@@ -47,7 +47,8 @@ def verify(p:Puzzle):
 
     return soln
 
-def print_solution(p:Puzzle, soln:ConcreteSolution):
+def print_solution(soln:ConcreteSolution):
+    p = soln.puzzle
     print("solution:")
     print(f"  {''.join([str(x) for x in p.cols])} ")
     print("  -------- ")

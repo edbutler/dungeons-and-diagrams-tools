@@ -33,7 +33,7 @@ def is_square_in_treaure_room(room:Location, sx:int, sy:int):
         z3.Or(sx == rx, sx - 1 == rx),
         z3.Or(sy == ry, sy - 1 == ry))
 
-def add_constraints(solver:Solver, puzzle:Puzzle, soln:SymbolicSolution):
+def add_constraints(solver:Solver, puzzle:SymbolicPuzzle|ConcretePuzzle, soln:SymbolicSolution):
     # row/col filled counts
     for i in range(BoardSize):
         row = row_ref(soln, i)
