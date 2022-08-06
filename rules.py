@@ -1,5 +1,5 @@
 
-from typing import Any, NamedTuple, Protocol
+from typing import Any, Protocol
 import math
 import z3
 import itertools
@@ -51,8 +51,8 @@ def add_constraints(solver:Solver, puzzle:Puzzle, soln:SymbolicSolution):
             is_in_any_treausre_room = z3.Or(*[is_cell_in_treaure_room(t, i, j) for t in soln.chest_rooms])
             solver.add(z3.Implies(is_in_any_treausre_room, z3.Not(cell_ref(soln, i, j))))
 
-            if (i,j) in puzzle.chests:
-                solver.add(is_in_any_treausre_room)
+            is_chest = puzzle.chests[i][j]
+            solver.add(z3.Implies(is_chest, is_in_any_treausre_room))
 
     # treasure rooms always have exactly one exit
     for i in range(BoardSize):
@@ -72,10 +72,12 @@ def add_constraints(solver:Solver, puzzle:Puzzle, soln:SymbolicSolution):
                     11 == num_filled([cell_ref_or_true(soln,x,y) for x,y in walls])))
 
     # monsters always at a dead end
-    for mx, my in puzzle.monsters:
-        solver.add(z3.Not(cell_ref(soln, mx, my)))
-        neighbors = neighbors_of(mx,my)
-        solver.add(3 == num_filled([cell_ref_or_true(soln,x,y) for x,y in neighbors]))
+    for mx in range(BoardSize):
+        for my in range(BoardSize):
+            is_monster = puzzle.monsters[mx][my]
+            solver.add(z3.Implies(is_monster, z3.Not(cell_ref(soln, mx, my))))
+            neighbors = neighbors_of(mx,my)
+            solver.add(z3.Implies(is_monster, 3 == num_filled([cell_ref_or_true(soln,x,y) for x,y in neighbors])))
 
     # no empty 2x2 squares except in treasure rooms
     for i in range(BoardSize - 1):
@@ -93,13 +95,15 @@ def add_constraints(solver:Solver, puzzle:Puzzle, soln:SymbolicSolution):
     # no dead ends except near monsters
     for i in range(BoardSize):
         for j in range(BoardSize):
-            if (i,j) not in puzzle.monsters:
-                neighbors = neighbors_of(i,j)
-                # every cell is either filled or has at least 2 empty neighbors
-                solver.add(
+            is_not_monster = z3.Not(puzzle.monsters[i][j])
+            neighbors = neighbors_of(i,j)
+            # every cell is either filled or has at least 2 empty neighbors
+            solver.add(
+                z3.Implies(
+                    is_not_monster,
                     z3.Or(
                         cell_ref(soln,i,j),
-                        2 >= num_filled([cell_ref_or_true(soln,x,y) for x,y in neighbors])))
+                        2 >= num_filled([cell_ref_or_true(soln,x,y) for x,y in neighbors]))))
 
     # all open spaces must be connected
     all_cell_indices = [(x,y) for x in range(BoardSize) for y in range(BoardSize)]

@@ -1,5 +1,5 @@
 
-from typing import Any, NamedTuple, Protocol
+from typing import NamedTuple
 import math
 import z3
 
@@ -24,8 +24,12 @@ class ConcreteSolution(NamedTuple):
 class Puzzle(NamedTuple):
     rows: list[int]
     cols: list[int]
-    monsters: list[tuple[int,int]]
-    chests: list[tuple[int,int]]
+    # stored column major like the board
+    monsters: list[list[Cell]]
+    chests: list[list[Cell]]
+
+def boolean_grid_from_tuples(tuples:list[tuple[int,int]]) -> list[list[Cell]]:
+    return [[(x,y) in tuples for y in range(BoardSize)] for x in range(BoardSize)]
 
 one = z3.BitVecVal(1, BitvecBits)
 zero = z3.BitVecVal(0, BitvecBits)

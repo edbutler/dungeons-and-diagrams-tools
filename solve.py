@@ -23,9 +23,9 @@ def print_solution(p:Puzzle, soln:ConcreteSolution):
     for y in range(BoardSize):
         print(f'{p.rows[y]}|', end="")
         for x in range(BoardSize):
-            if (x,y) in p.monsters:
+            if p.monsters[x][y]:
                 c = "M"
-            elif (x,y) in p.chests:
+            elif p.chests[x][y]:
                 c = "T"
             elif soln.board[x][y]:
                 c = "█"

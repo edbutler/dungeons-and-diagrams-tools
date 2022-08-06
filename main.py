@@ -1,5 +1,5 @@
 from solve import solve, print_solution
-from game import Puzzle
+from game import Puzzle, boolean_grid_from_tuples
 
 def test(p:Puzzle):
     soln = solve(p)
@@ -12,8 +12,8 @@ p = Puzzle(
     # the numer of filled blocks for each column
     cols=[1,3,3,3,3,5,3,3],
     # the 0-indexed x,y location of each monster in the grid
-    monsters=[(7,0),(7,4),(6,5),(7,6)],
+    monsters=boolean_grid_from_tuples([(7,0),(7,4),(6,5),(7,6)]),
     # the 0-indexed x,y location of each chest in the grid
-    chests=[(0,0)])
+    chests=boolean_grid_from_tuples([(0,0)]))
 
 test(p)
