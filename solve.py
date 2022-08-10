@@ -28,6 +28,7 @@ def verify(p:SymbolicPuzzle|ConcretePuzzle):
 
     # first make sure it has any solution at all
     if s.check() != z3.sat:
+        print('puzzle has no solution!')
         return None
 
     # and cache this solution before the next check since extra clauses mess up the model
@@ -43,6 +44,7 @@ def verify(p:SymbolicPuzzle|ConcretePuzzle):
 
     # if this is sat, then we have 2 solutions, so it's an invalid puzzle
     if s.check() == z3.sat:
+        print('solution is not unique!')
         return None
 
     return soln

@@ -25,6 +25,7 @@ print('verifying...')
 maybe_print(verify(example_puzzle))
 
 # can even solve puzzles where parts of the puzzle are undefined
+# (verification doesn't work with this yet due to leaving puzzle unconstrained)
 print('solving with some of the rows/cols unconstrained...')
 partial_puzzle = SymbolicPuzzle(
     # `symbolic_int` is any integer value, the solver needs to figure out what it should be
